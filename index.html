@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spinner Wheel</title>
+<link rel="shortcut icon" href="https://www.rw-designer.com/icon-view/22109.png" type="image/x-icon">
+
+<style>
+  :root {
+    --bg-color: #121212;
+    --text-color: #eee;
+    --accent-color: #e63946;
+    --slice-light: hsl(200, 70%, 60%);
+    --slice-dark: hsl(200, 70%, 40%);
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body {
+    margin: 0;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    user-select: none;
+  }
+  h1 {
+    margin-bottom: 0.5em;
+  }
+  #wheel-container {
+    position: relative;
+    width: 90vmin;
+    max-width: 500px;
+    aspect-ratio: 1 / 1;
+  }
+  canvas#wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.7);
+    background: transparent;
+  }
+  .pointer {
+    position: absolute;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 30px solid var(--accent-color);
+    filter: drop-shadow(0 0 5px black);
+  }
+  button#spin-btn {
+    margin-top: 1em;
+    padding: 12px 36px;
+    font-size: 1.2rem;
+    background: var(--accent-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button#spin-btn:disabled {
+    background: #555;
+    cursor: wait;
+  }
+  button#spin-btn:hover:not(:disabled) {
+    background: #d62828;
+  }
+  #result {
+    margin-top: 1em;
+    font-size: 1.4rem;
+    min-height: 1.5em;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spinner</h1>
+<div id="wheel-container">
+  <div class="pointer"></div>
+  <canvas id="wheel" width="500" height="500" aria-label="Spinner wheel"></canvas>
+</div>
+<button id="spin-btn">Spin!</button>
+<div id="result" aria-live="polite"></div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.getElementById('spin-btn');
+  const resultEl = document.getElementById('result');
+
+  const numSlices = 42;
+  const sliceAngle = (2 * Math.PI) / numSlices;
+  const center = canvas.width / 2;
+  const radius = center - 10;
+
+  // Default prank numbers
+  const defaultPrankNumbers = [1, 30, 23, 6, 14];
+
+  // Load prank numbers from localStorage or use default
+  function loadPrankNumbers() {
+    const stored = localStorage.getItem('prankNumbers');
+    if (stored) {
+      // Parse string like "1,30,23,6,14" into array of numbers
+      const arr = stored.split(',')
+        .map(s => parseInt(s.trim()))
+        .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
+      if (arr.length > 0) return arr;
+    }
+    return defaultPrankNumbers.slice();
+  }
+
+  let prankNumbers = loadPrankNumbers();
+
+  console.log("Current prank numbers sequence:", prankNumbers);
+  console.log("To update prank numbers, call setPrankNumbers('1,5,10') in the console.");
+
+  // Expose function globally to update prank numbers string and reload
+  window.setPrankNumbers = function(str) {
+    if (typeof str !== 'string') {
+      console.error('setPrankNumbers expects a comma-separated string of numbers.');
+      return;
+    }
+    const arr = str.split(',')
+      .map(s => parseInt(s.trim()))
+      .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
+    if (arr.length === 0) {
+      console.error('No valid numbers found. Please provide numbers between 1 and', numSlices);
+      return;
+    }
+    localStorage.setItem('prankNumbers', arr.join(','));
+    console.log('Prank numbers updated to:', arr);
+    location.reload();
+  };
+
+  // Colors for slices (alternating)
+  function getSliceColor(i) {
+    return i % 2 === 0 ? 'hsl(200, 70%, 60%)' : 'hsl(200, 70%, 40%)';
+  }
+
+  // Draw the wheel with numbers
+  function drawWheel(rotation = 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(rotation);
+    for (let i = 0; i < numSlices; i++) {
+      // Draw slice
+      ctx.beginPath();
+      ctx.fillStyle = getSliceColor(i);
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
+      ctx.closePath();
+      ctx.fill();
+
+      // Draw number
+      ctx.save();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      const angle = i * sliceAngle + sliceAngle / 2;
+      ctx.rotate(angle);
+      ctx.fillText(i + 1, radius - 15, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Web Audio API tick sound
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playTick() {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1800, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.2, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.07);
+  }
+
+  // Web Audio API win sound
+  function playWin() {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(900, t);
+    osc.frequency.exponentialRampToValueAtTime(220, t + 0.45);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.6, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.5);
+  }
+
+  // Get next prank number or random
+  function getNextNumber() {
+    if (prankNumbers.length > 0) {
+      return prankNumbers.shift();
+    }
+    return Math.floor(Math.random() * numSlices) + 1;
+  }
+
+  // Spin animation
+  function spinWheel() {
+    audioCtx.resume();
+    spinBtn.disabled = true;
+    resultEl.style.display = 'none';
+    resultEl.textContent = '';
+
+    const chosenNumber = getNextNumber();
+    const chosenSlice = chosenNumber - 1;
+    const extraRotations = Math.floor(Math.random() * 4) + 5;
+    const randomOffset = Math.random() * 0.02;
+
+    // Calculate final rotation so chosen slice lands at pointer (top)
+    const finalRotation =
+      (extraRotations * 2 * Math.PI) -
+      (chosenSlice * sliceAngle) -
+      sliceAngle / 2 +
+      Math.PI * 1.5 + // pointer offset
+      randomOffset;
+
+    const spinDuration = 6000 + (Math.random() * 3000);
+    
+    let startTime = null;
+    let nextTickAngle = sliceAngle;
+    let lastAngle = 0;
+
+    function animate(time) {
+      if (!startTime) startTime = time;
+      let elapsed = time - startTime;
+      let progress = Math.min(elapsed / spinDuration, 1);
+      // Ease out quartic
+      let easedProgress = 1 - Math.pow(1 - progress, 4);
+      let currentAngle = finalRotation * easedProgress;
+
+      drawWheel(currentAngle);
+
+      // Play tick sound on each slice passed
+      while (currentAngle >= nextTickAngle) {
+        playTick();
+        nextTickAngle += sliceAngle;
+      }
+
+      lastAngle = currentAngle;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        resultEl.style.display = 'block';
+        resultEl.textContent = `Winner: ${chosenNumber}`;
+        playWin();
+        spinBtn.disabled = false;
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  spinBtn.addEventListener('click', spinWheel);
+
+  // Initial draw
+  drawWheel();
+})();
+</script>
+
+</body>
+</html>
