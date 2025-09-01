@@ -111,13 +111,13 @@
   const radius = center - 10;
 
   // Default prank numbers
-  const defaultPrankNumbers = [1, 30, 23, 6, 14];
+  const defaultPrankNumbers = [33,17,10,36];
 
   // Load prank numbers from localStorage or use default
   function loadPrankNumbers() {
     const stored = localStorage.getItem('prankNumbers');
     if (stored) {
-      // Parse string like "1,30,23,6,14" into array of numbers
+      
       const arr = stored.split(',')
         .map(s => parseInt(s.trim()))
         .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
