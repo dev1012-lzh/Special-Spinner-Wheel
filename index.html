@@ -122,17 +122,10 @@
             const radius = center - 10;
 
             // Default prank numbers
-            const defaultPrankNumbers = [33, 17, 10, 36];
+            const defaultPrankNumbers = [36,15,10,17,21,5,34,1,13,33];
 
-            // Load prank numbers from localStorage or use default
-            // Shuffle array in-place using Fisher-Yates algorithm
-            function shuffleArray(arr) {
-                for (let i = arr.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [arr[i], arr[j]] = [arr[j], arr[i]];
-                }
-                return arr;
-            }
+        
+
             // Load prank numbers from localStorage or use shuffled default
             function loadPrankNumbers() {
                 const stored = localStorage.getItem('prankNumbers');
@@ -143,7 +136,7 @@
                     if (arr.length > 0) return arr;
                 }
                 // Shuffle default prank numbers before returning
-                return shuffleArray(defaultPrankNumbers.slice());
+                return defaultPrankNumbers.slice();
             }
 
 
@@ -264,7 +257,7 @@
                     Math.PI * 1.5 + // pointer offset
                     randomOffset;
 
-                const spinDuration = 6000 + (Math.random() * 3000);
+                const spinDuration = 8000 + (Math.random() * 3000);
 
                 let startTime = null;
                 let nextTickAngle = sliceAngle;
@@ -275,7 +268,7 @@
                     let elapsed = time - startTime;
                     let progress = Math.min(elapsed / spinDuration, 1);
                     // Ease out quartic
-                    let easedProgress = 1 - Math.pow(1 - progress, 4);
+                    let easedProgress = 1 - Math.pow(1 - progress, 3);
                     let currentAngle = finalRotation * easedProgress;
 
                     drawWheel(currentAngle);
