@@ -6,19 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Spinner Wheel</title>
     <link rel="shortcut icon" href="https://www.rw-designer.com/icon-view/22109.png" type="image/x-icon">
-
+    <!--
+    README - IMPORTANT
+    Guidelines for Spinner Wheel Site:
+    1. This site is for EDUCATIONAL/FUN/PERSONAL purposes only. Do not use in commercial applications.
+    2. Do not attempt to manipulate or use the spinner for gambling or real-world decision making.
+    3. The spinner numbers and results are for demonstration and learning only.
+    4. You may customize the prank numbers using the browser console, but changes are LOCAL to your device.
+    5. The developer is NOT responsible for any misuse or damages resulting from use of this spinner.
+    6. Use responsibly. DO NOT SHARE OR DEPLOY this site for COMMERCIAL use. USE EMBEDDED IN COMMERCIAL SCENARIOS.
+    7. By using this site, you agree to these terms. If you do not agree, do not use. Easy as that.
+    8. Enjoy learning and experimenting with the spinner responsibly!
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #121212;
-            --text-color: #eee;
-            --accent-color: #e63946;
-            --slice-light: hsl(200, 70%, 60%);
-            --slice-dark: hsl(200, 70%, 40%);
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --text-color: #ffffff;
+            --accent-color: #36a195;
+            --slice-light: hsl(34, 100%, 50%);
+            --slice-dark: hsl(0, 42%, 43%);
+            --font-family: Poppins;
         }
-
+        html{margin: 0;padding: 0;}
         body {
-            margin: 0;
+            
             background: var(--bg-color);
             color: var(--text-color);
             font-family: var(--font-family);
@@ -28,10 +40,20 @@
             justify-content: center;
             height: 100vh;
             user-select: none;
+            
         }
 
         h1 {
-            margin-bottom: 0.5em;
+            padding: 10px;
+            margin: 0;
+            display: block;
+            position: absolute;
+            top: 0px;
+            left: 0;
+
+            
+            width: 100%;
+            background-color: #555;
         }
 
         #wheel-container {
@@ -66,21 +88,25 @@
             margin-top: 1em;
             padding: 12px 36px;
             font-size: 1.2rem;
+            font-family: var(--font-family);
             background: var(--accent-color);
             border: none;
             border-radius: 8px;
             color: white;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         button#spin-btn:disabled {
             background: #555;
             cursor: wait;
+            opacity: 0;
         }
 
         button#spin-btn:hover:not(:disabled) {
-            background: #d62828;
+            background: #79cbcc;
+            opacity: 1;
+            color: black;
         }
 
         #result {
@@ -88,17 +114,21 @@
             font-size: 1.4rem;
             min-height: 1.5em;
             position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            padding: 8px 16px;
+            background: var(--accent-color);
+            padding: 10px;
             border-radius: 8px;
             display: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
-
+<!--EDUCATIONAL PURPOSES ONLY - DO NOT USE IN COMMERCIAL APPLICATIONS AND SCENARIOS-->
 <body>
 
     <h1>Spinner</h1>
@@ -110,7 +140,7 @@
     <div id="result" aria-live="polite"></div>
 
     <script>
-        (() => {
+        
             const canvas = document.getElementById('wheel');
             const ctx = canvas.getContext('2d');
             const spinBtn = document.getElementById('spin-btn');
@@ -123,8 +153,6 @@
 
             // Default prank numbers
             const defaultPrankNumbers = [36,15,10,17,21,5,34,1,13,33];
-
-        
 
             // Load prank numbers from localStorage or use shuffled default
             function loadPrankNumbers() {
@@ -141,11 +169,9 @@
 
 
             let prankNumbers = loadPrankNumbers();
-
+            console.warn("EDUCATIONAL PURPOSES ONLY - DO NOT USE IN COMMERCIAL APPLICATIONS AND SCENARIOS");
             console.log("Current prank numbers sequence:", prankNumbers);
             console.log("To update prank numbers, call setPrankNumbers('1,5,10') in the console.");
-
-            // Expose function globally to update prank numbers string and reload
             window.setPrankNumbers = function (str) {
                 if (typeof str !== 'string') {
                     console.error('setPrankNumbers expects a comma-separated string of numbers.');
@@ -165,7 +191,11 @@
 
             // Colors for slices (alternating)
             function getSliceColor(i) {
-                return i % 2 === 0 ? 'hsl(200, 70%, 60%)' : 'hsl(200, 70%, 40%)';
+                // Get CSS variables from :root
+                const rootStyles = getComputedStyle(document.documentElement);
+                const light = rootStyles.getPropertyValue('--slice-light').trim();
+                const dark = rootStyles.getPropertyValue('--slice-dark').trim();
+                return i % 2 === 0 ? light : dark;
             }
 
             // Draw the wheel with numbers
@@ -285,20 +315,15 @@
                         requestAnimationFrame(animate);
                     } else {
                         resultEl.style.display = 'block';
-                        resultEl.textContent = `Winner: ${chosenNumber}`;
+                        resultEl.innerHTML = `Winner - <b> ${chosenNumber}</b>`;
                         playWin();
                         spinBtn.disabled = false;
                     }
                 }
-
                 requestAnimationFrame(animate);
             }
-
             spinBtn.addEventListener('click', spinWheel);
-
-            // Initial draw
-            drawWheel();
-        })();
+            drawWheel();        
     </script>
 
 </body>
