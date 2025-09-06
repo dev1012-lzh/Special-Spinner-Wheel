@@ -15,6 +15,8 @@ On live [here](https://dev1012-lzh.github.io/Special-Spinner-Wheel/)
 # Usage
 1. In the site, open console in your favourite browser by using F12 key. May vary depending on browser.
 2. To check the currently number, uncolapse the Current prank number sequence array. (Image below)
-3. To change the number sequence, call `setPrankNumbers('x,y,z')` in console. MUST have symbol `'`! Then the page will auto refreshed. 
+3. To change the number sequence, call `setPrankNumbers('x,y,z')` in console. MUST have symbol `'`! Then the page will auto refreshed.
+4. After running out of selected numbers, true random numbers will be called.
+   
 
 <img width="348" height="182" alt="image" src="https://github.com/user-attachments/assets/ba4a2d68-1447-4d28-86cb-7573eca17b1a" />
