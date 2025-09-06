@@ -2,7 +2,7 @@
 Prankable spinner wheel. Highly customizable, functional. Easy to use, lightweight.
 On live [here](https://dev1012-lzh.github.io/Special-Spinner-Wheel/)
 
-# Guidelines
+# GUIDELINES
 1. This site is for **EDUCATIONAL/FUN/PERSONAL** purposes only. **DO NOT USE** in **commercial** applications.
 2. Do not attempt to _manipulate_ or _use_ the spinner for _gambling_ or _real-world decision_ making.
 3. The spinner numbers and results are for demonstration and learning only.
