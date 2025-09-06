@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,9 +27,14 @@
             --slice-dark: hsl(0, 42%, 43%);
             --font-family: Poppins;
         }
-        html{margin: 0;padding: 0;}
+
+        html {
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            
+
             background: var(--bg-color);
             color: var(--text-color);
             font-family: var(--font-family);
@@ -40,7 +44,7 @@
             justify-content: center;
             height: 100vh;
             user-select: none;
-            
+
         }
 
         h1 {
@@ -51,7 +55,7 @@
             top: 0px;
             left: 0;
 
-            
+
             width: 100%;
             background-color: #555;
         }
@@ -81,7 +85,8 @@
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
             border-bottom: 30px solid var(--accent-color);
-            filter: drop-shadow(0 0 5px black);
+            filter: drop-shadow(-5px 5px 5px rgba(0,0,0,0.5)) drop-shadow(5px 5px 5px rgba(0,0,0,0.5)) drop-shadow(0px 10px 8px rgba(0,0,0,0.7));
+            z-index: 3;
         }
 
         button#spin-btn {
@@ -124,13 +129,16 @@
             padding: 10px;
             border-radius: 8px;
             display: none;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+            border: 0px solid solid;
+            outline: 0px solid;
+
         }
     </style>
 </head>
 <!--EDUCATIONAL PURPOSES ONLY - DO NOT USE IN COMMERCIAL APPLICATIONS AND SCENARIOS-->
 <body>
-
     <h1>Spinner</h1>
     <div id="wheel-container">
         <div class="pointer"></div>
@@ -140,190 +148,174 @@
     <div id="result" aria-live="polite"></div>
 
     <script>
-        
-            const canvas = document.getElementById('wheel');
-            const ctx = canvas.getContext('2d');
-            const spinBtn = document.getElementById('spin-btn');
-            const resultEl = document.getElementById('result');
+        const canvas = document.getElementById('wheel'),
+            ctx = canvas.getContext('2d'),
+            spinBtn = document.getElementById('spin-btn'),
+            resultEl = document.getElementById('result'),
+            numSlices = 42,
+            sliceAngle = (2 * Math.PI) / numSlices,
+            center = canvas.width / 2,
+            radius = center - 10;
 
-            const numSlices = 42;
-            const sliceAngle = (2 * Math.PI) / numSlices;
-            const center = canvas.width / 2;
-            const radius = center - 10;
+        // Default prank numbers
+        const defaultPrankNumbers = [36, 15, 10, 17, 21, 5, 34, 1, 13, 33];
 
-            // Default prank numbers
-            const defaultPrankNumbers = [36,15,10,17,21,5,34,1,13,33];
-
-            // Load prank numbers from localStorage or use shuffled default
-            function loadPrankNumbers() {
-                const stored = localStorage.getItem('prankNumbers');
-                if (stored) {
-                    const arr = stored.split(',')
-                        .map(s => parseInt(s.trim()))
-                        .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
-                    if (arr.length > 0) return arr;
-                }
-                // Shuffle default prank numbers before returning
-                return defaultPrankNumbers.slice();
-            }
-
-
-            let prankNumbers = loadPrankNumbers();
-            console.warn("EDUCATIONAL PURPOSES ONLY - DO NOT USE IN COMMERCIAL APPLICATIONS AND SCENARIOS");
-            console.log("Current prank numbers sequence:", prankNumbers);
-            console.log("To update prank numbers, call setPrankNumbers('1,5,10') in the console.");
-            window.setPrankNumbers = function (str) {
-                if (typeof str !== 'string') {
-                    console.error('setPrankNumbers expects a comma-separated string of numbers.');
-                    return;
-                }
-                const arr = str.split(',')
+        // Load prank numbers from localStorage or use shuffled default
+        function loadPrankNumbers() {
+            const stored = localStorage.getItem('prankNumbers');
+            if (stored) {
+                const arr = stored.split(',')
                     .map(s => parseInt(s.trim()))
                     .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
-                if (arr.length === 0) {
-                    console.error('No valid numbers found. Please provide numbers between 1 and', numSlices);
-                    return;
-                }
-                localStorage.setItem('prankNumbers', arr.join(','));
-                console.log('Prank numbers updated to:', arr);
-                location.reload();
-            };
-
-            // Colors for slices (alternating)
-            function getSliceColor(i) {
-                // Get CSS variables from :root
-                const rootStyles = getComputedStyle(document.documentElement);
-                const light = rootStyles.getPropertyValue('--slice-light').trim();
-                const dark = rootStyles.getPropertyValue('--slice-dark').trim();
-                return i % 2 === 0 ? light : dark;
+                if (arr.length > 0) return arr;
             }
+            // Shuffle default prank numbers before returning
+            return defaultPrankNumbers.slice();
+        }
+        let prankNumbers = loadPrankNumbers();
+        console.log(' ORIGINAL https://github.com/dev1012-lzh/Special-Spinner-Wheel/blob/main/index.html ')
+        console.warn("EDUCATIONAL PURPOSES ONLY - DO NOT USE IN COMMERCIAL APPLICATIONS AND SCENARIOS");
+        console.log("Current prank numbers sequence:", prankNumbers);
+        console.log("To update prank numbers, call setPrankNumbers('1,5,10') in the console.");
+        window.setPrankNumbers = function (str) {
+            if (typeof str !== 'string') {
+                console.error('setPrankNumbers expects a comma-separated string of numbers.');
+                return;
+            }
+            const arr = str.split(',')
+                .map(s => parseInt(s.trim()))
+                .filter(n => !isNaN(n) && n >= 1 && n <= numSlices);
+            if (arr.length === 0) {
+                console.error('No valid numbers found. Please provide numbers between 1 and', numSlices);
+                return;
+            }
+            localStorage.setItem('prankNumbers', arr.join(','));
+            console.log('Prank numbers updated to:', arr);
+            location.reload();
+        };
 
-            // Draw the wheel with numbers
-            function drawWheel(rotation = 0) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function getSliceColor(i) {
+            // Get CSS variables from :root
+            const rootStyles = getComputedStyle(document.documentElement),
+                light = rootStyles.getPropertyValue('--slice-light').trim(),
+                dark = rootStyles.getPropertyValue('--slice-dark').trim();
+            return i % 2 === 0 ? light : dark;
+        }
+
+        function drawWheel(rotation = 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.rotate(rotation);
+            for (let i = 0; i < numSlices; i++) {
+                // Draw slice
+                ctx.beginPath();
+                ctx.fillStyle = getSliceColor(i);
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw number
                 ctx.save();
-                ctx.translate(center, center);
-                ctx.rotate(rotation);
-                for (let i = 0; i < numSlices; i++) {
-                    // Draw slice
-                    ctx.beginPath();
-                    ctx.fillStyle = getSliceColor(i);
-                    ctx.moveTo(0, 0);
-                    ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // Draw number
-                    ctx.save();
-                    ctx.fillStyle = '#000';
-                    ctx.font = 'bold 16px Arial';
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'middle';
-                    const angle = i * sliceAngle + sliceAngle / 2;
-                    ctx.rotate(angle);
-                    ctx.fillText(i + 1, radius - 15, 0);
-                    ctx.restore();
-                }
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const angle = i * sliceAngle + sliceAngle / 2;
+                ctx.rotate(angle);
+                ctx.fillText(i + 1, radius - 15, 0);
                 ctx.restore();
             }
+            ctx.restore();
+        }
 
-            // Web Audio API tick sound
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            function playTick() {
-                const t = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1800, t);
-                gain.gain.setValueAtTime(0.0001, t);
-                gain.gain.exponentialRampToValueAtTime(0.2, t + 0.004);
-                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-                osc.connect(gain).connect(audioCtx.destination);
-                osc.start(t);
-                osc.stop(t + 0.07);
+        // Web Audio API tick sound
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTick() {
+            const t = audioCtx.currentTime,
+                osc = audioCtx.createOscillator(),
+                gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1800, t);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.exponentialRampToValueAtTime(0.2, t + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.07);
+        }
+
+        // Web Audio API win sound
+        function playWin() {
+            const t = audioCtx.currentTime,
+                osc = audioCtx.createOscillator(),
+                gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(900, t);
+            osc.frequency.exponentialRampToValueAtTime(220, t + 0.45);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.exponentialRampToValueAtTime(0.6, t + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + 0.5);
+        }
+
+        function getNextNumber() {
+            if (prankNumbers.length > 0) {
+                return prankNumbers.shift();
             }
+            return Math.floor(Math.random() * numSlices) + 1;
+        }
+        /* ORIGINAL https://github.com/dev1012-lzh/Special-Spinner-Wheel/blob/main/index.html */
+        function spinWheel() {
+            audioCtx.resume();
+            spinBtn.disabled = true;
+            resultEl.style.display = 'none';
+            resultEl.textContent = '';
+            const chosenNumber = getNextNumber(),
+                chosenSlice = chosenNumber - 1,
+                extraRotations = Math.floor(Math.random() * 4) + 5,
+                randomOffset = Math.random() * 0.02;
+            // Calculate final rotation so chosen slice lands at pointer (top)
+            const finalRotation =
+                (extraRotations * 2 * Math.PI) -
+                (chosenSlice * sliceAngle) -
+                sliceAngle / 2 +
+                Math.PI * 1.5 + // pointer offset
+                randomOffset;
+            const spinDuration = 8000 + (Math.random() * 3000);
+            let startTime = null;
+            let nextTickAngle = sliceAngle;
+            let lastAngle = 0;
 
-            // Web Audio API win sound
-            function playWin() {
-                const t = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(900, t);
-                osc.frequency.exponentialRampToValueAtTime(220, t + 0.45);
-                gain.gain.setValueAtTime(0.0001, t);
-                gain.gain.exponentialRampToValueAtTime(0.6, t + 0.03);
-                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-                osc.connect(gain).connect(audioCtx.destination);
-                osc.start(t);
-                osc.stop(t + 0.5);
-            }
-
-            // Get next prank number or random
-            function getNextNumber() {
-                if (prankNumbers.length > 0) {
-                    return prankNumbers.shift();
+            function animate(time) {
+                if (!startTime) startTime = time;
+                let elapsed = time - startTime;
+                let progress = Math.min(elapsed / spinDuration, 1);
+                let easedProgress = 1 - Math.pow(1 - progress, 3); // EASE OUT CUBIC
+                let currentAngle = finalRotation * easedProgress;
+                /* ORIGINAL https://github.com/dev1012-lzh/Special-Spinner-Wheel/blob/main/index.html */
+                drawWheel(currentAngle);
+                while (currentAngle >= nextTickAngle) {
+                    playTick();
+                    nextTickAngle += sliceAngle;
                 }
-                return Math.floor(Math.random() * numSlices) + 1;
-            }
-
-            // Spin animation
-            function spinWheel() {
-                audioCtx.resume();
-                spinBtn.disabled = true;
-                resultEl.style.display = 'none';
-                resultEl.textContent = '';
-
-                const chosenNumber = getNextNumber();
-                const chosenSlice = chosenNumber - 1;
-                const extraRotations = Math.floor(Math.random() * 4) + 5;
-                const randomOffset = Math.random() * 0.02;
-
-                // Calculate final rotation so chosen slice lands at pointer (top)
-                const finalRotation =
-                    (extraRotations * 2 * Math.PI) -
-                    (chosenSlice * sliceAngle) -
-                    sliceAngle / 2 +
-                    Math.PI * 1.5 + // pointer offset
-                    randomOffset;
-
-                const spinDuration = 8000 + (Math.random() * 3000);
-
-                let startTime = null;
-                let nextTickAngle = sliceAngle;
-                let lastAngle = 0;
-
-                function animate(time) {
-                    if (!startTime) startTime = time;
-                    let elapsed = time - startTime;
-                    let progress = Math.min(elapsed / spinDuration, 1);
-                    // Ease out quartic
-                    let easedProgress = 1 - Math.pow(1 - progress, 3);
-                    let currentAngle = finalRotation * easedProgress;
-
-                    drawWheel(currentAngle);
-
-                    // Play tick sound on each slice passed
-                    while (currentAngle >= nextTickAngle) {
-                        playTick();
-                        nextTickAngle += sliceAngle;
-                    }
-
-                    lastAngle = currentAngle;
-
-                    if (progress < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        resultEl.style.display = 'block';
-                        resultEl.innerHTML = `Winner - <b> ${chosenNumber}</b>`;
-                        playWin();
-                        spinBtn.disabled = false;
-                    }
+                lastAngle = currentAngle;
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    resultEl.style.display = 'block';
+                    resultEl.innerHTML = `Winner - <b> ${chosenNumber}</b>`;
+                    playWin();
+                    spinBtn.disabled = false;
                 }
-                requestAnimationFrame(animate);
             }
-            spinBtn.addEventListener('click', spinWheel);
-            drawWheel();        
+            requestAnimationFrame(animate);
+        }
+        spinBtn.addEventListener('click', spinWheel);
+        drawWheel();        
     </script>
 
 </body>
