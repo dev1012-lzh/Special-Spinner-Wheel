@@ -1,4 +1,4 @@
-# Special-Spinner-Wheel
+# Prank-Spinner-Wheel
 Prankable spinner wheel. Highly customizable, functional. Easy to use, lightweight.
 On live [here](https://dev1012-lzh.github.io/Special-Spinner-Wheel/)
 
