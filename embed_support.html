@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Premium Pale Spinner</title>
+    <title>Pale Spinner - Hum Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,17 +22,11 @@
             overflow: hidden;
         }
 
-        #ui-layer {
-            text-align: center;
-            margin-bottom: 20px;
-            z-index: 20;
-        }
-
         #result-text {
             font-size: 1.8rem;
             font-weight: 600;
             color: #444;
-            margin: 0;
+            margin-bottom: 20px;
             min-height: 1.2em;
         }
 
@@ -40,7 +34,6 @@
             position: relative;
             width: 85vmin; height: 85vmin;
             max-width: 500px; max-height: 500px;
-            display: flex; align-items: center; justify-content: center;
         }
 
         canvas {
@@ -51,9 +44,9 @@
 
         .pointer-tri {
             position: absolute;
-            top: 25%; 
+            top: 22%; 
             left: 50%;
-            width: 50px; height: 50px;
+            width: 50px; height: 55px;
             background: var(--ptr);
             clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
             transform: translateX(-50%);
@@ -81,21 +74,16 @@
             color: #fff;
             font-weight: 600;
             font-size: 1rem;
-            letter-spacing: 1px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
         }
 
-        button:hover { transform: scale(1.05); background: #444; }
-        button:active { transform: scale(0.95); }
-        button:disabled { background: #bbb; cursor: not-allowed; transform: none; }
+        button:hover { background: #444; transform: translateY(-2px); }
+        button:disabled { background: #bbb; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <p id="result-text">Ready?</p>
-    </div>
+    <p id="result-text">Landed on: -</p>
 
     <div id="wheel-wrapper">
         <div class="pointer-tri"></div>
@@ -116,20 +104,33 @@
         const prankSequence = [1, 3, 5, 7, 9];
         let prankIndex = 0;
 
-        // Audio Context for Ticks
+        // Audio Setup: Mid-range Hum
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTick(vol) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+        let humOsc = null;
+        let humGain = null;
+
+        function startHum() {
+            humOsc = audioCtx.createOscillator();
+            humGain = audioCtx.createGain();
+            humOsc.type = 'triangle'; 
+            humOsc.frequency.setValueAtTime(330, audioCtx.currentTime); // Mid-range E4
+            humGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            humOsc.connect(humGain);
+            humGain.connect(audioCtx.destination);
+            humOsc.start();
+        }
+
+        function updateHum(velocity) {
+            if (!humOsc) return;
+            // Pitch shifts slightly with speed
+            humOsc.frequency.setTargetAtTime(220 + (velocity * 220), audioCtx.currentTime, 0.05);
+            // Volume tied to velocity
+            humGain.gain.setTargetAtTime(velocity * 0.15, audioCtx.currentTime, 0.05);
+        }
+
+        function stopHum() {
+            if (humGain) humGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            setTimeout(() => { if(humOsc) humOsc.stop(); }, 200);
         }
 
         function draw(rotation = 0) {
@@ -149,24 +150,22 @@
                 ctx.moveTo(0, 0);
                 ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
                 ctx.fill();
-                
-                ctx.strokeStyle = "rgba(255,255,255,1)";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(0,0,0,0.05)";
+                ctx.lineWidth = 1;
                 ctx.stroke();
 
                 ctx.save();
                 ctx.rotate(i * sliceAngle + sliceAngle / 2);
                 ctx.fillStyle = "#333";
-                ctx.font = "600 30px Poppins";
+                ctx.font = "600 28px Poppins";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
-                ctx.fillText(i + 1, radius - 60, 0);
+                ctx.fillText(i + 1, radius - 55, 0);
                 ctx.restore();
             }
             ctx.restore();
         }
 
-        // 1 starts at top. Offset = -90deg - half slice
         let currentRotation = -Math.PI / 2 - (sliceAngle / 2);
         draw(currentRotation);
 
@@ -175,40 +174,40 @@
             
             btn.disabled = true;
             resText.innerText = "Spinning...";
+            startHum();
             
             const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
-            const extraSpins = (8 + Math.random() * 2) * Math.PI * 2; 
+            const extraSpins = (7 + Math.random() * 2) * Math.PI * 2; 
+            
+            // RANDOM OFFSET: Land slightly off-center for realism
+            // Slices are ~9.2 degrees. We offset by up to +/- 3.5 degrees
+            const randomPadding = (Math.random() - 0.5) * (sliceAngle * 0.7);
+            
             const targetSliceIndex = targetNum - 1;
-            const finalLandingAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2);
+            const finalLandingAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2) + randomPadding;
             
             const startAngle = currentRotation;
             const endAngle = startAngle + extraSpins + (finalLandingAngle - (startAngle % (Math.PI * 2)));
             
-            const duration = 5000;
+            const duration = 6000;
             const startTime = performance.now();
-            let lastTickAngle = startAngle;
 
             function animate(now) {
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / duration, 1);
                 
-                // Quartic Ease Out (Faster start, very long smooth finish)
                 const ease = 1 - Math.pow(1 - t, 4);
-                currentRotation = startAngle + (endAngle - startAngle) * ease;
+                const velocity = Math.pow(1 - t, 2); // Simulated slowing down
                 
-                // Sound logic: Play tick every time a new slice passes the top
-                if (Math.abs(currentRotation - lastTickAngle) >= sliceAngle) {
-                    const velocity = 1 - t; // Volume and pitch drop as it slows
-                    playTick(0.1 * velocity + 0.02);
-                    lastTickAngle = currentRotation;
-                }
-
+                currentRotation = startAngle + (endAngle - startAngle) * ease;
+                updateHum(velocity);
                 draw(currentRotation);
 
                 if (t < 1) {
                     requestAnimationFrame(animate);
                 } else {
+                    stopHum();
                     btn.disabled = false;
                     resText.innerText = "Landed on: " + targetNum;
                     currentRotation %= (Math.PI * 2);
