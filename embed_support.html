@@ -145,8 +145,8 @@
         div.foot {
             position: absolute;
             bottom: 10px;
-            font-size: 0.8rem;
-            color: #d1d1d1;
+            font-size: 17px;
+            color: #b1b0b0;
         }
     </style>
 </head>
@@ -163,7 +163,7 @@
     <button id="spinBtn">ROLL NUMBERS</button>
 
     <div class="foot">
-        <p>Technical support provided by lzh</p>
+        <p>Made by lzh with <span style="font-size:35px;">👻</span></p>
     </div>
 
     <script>
@@ -221,6 +221,15 @@
             strip.innerHTML = html;
         }
 
+const finalMessages = [
+            targetNum => `That's you. Number ${targetNum}.`,
+            targetNum => `Nice to meet you. Number ${targetNum}.`,
+            targetNum => `You. ${targetNum} is the lucky number today.`,
+            targetNum => `Hi, ${targetNum}.`,
+            targetNum => `That's you. Number ${targetNum}.`,
+        ];
+        let finalTextIndex = 0;
+
         btn.addEventListener('click', () => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             btn.disabled = true;
@@ -228,10 +237,11 @@
                 "Spinning...",
                 "Shuffling...",
                 "Momentum, p=mv is building...",
-                "Luck is turning..."
+                "Luck is turning to..."
 
             ];
-            banner.innerText = rollingTexts[Math.floor(Math.random() * rollingTexts.length)];
+            let rollingTextIndex = Math.floor(Math.random() * rollingTexts.length);
+            banner.innerText = rollingTexts[rollingTextIndex];
 
 
             const targetNum = prankSequence[prankIndex++] || Math.floor(Math.random() * 39) + 1;
@@ -278,7 +288,8 @@
 
                     setTimeout(() => {
                         btn.disabled = false;
-                        banner.innerText = "That's you. Number " + targetNum;
+                        banner.innerText = finalMessages[finalTextIndex](targetNum);
+                        finalTextIndex = (finalTextIndex + 1) % finalMessages.length;
                     }, 500);
                 }
             }
