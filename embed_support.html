@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pale Aesthetic Spinner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Pale Spinner 1-39</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f4f4f4; /* Light grey background for Canva compatibility */
-            --text-color: #333333;
-            --accent-color: #999999;
-            --slice-1: #ffffff; /* White */
-            --slice-2: #d6dbdb; /* Pale Blue-Grey */
-            --slice-3: #a3a1a4; /* Pale Mauve-Grey */
-            --font-family: 'Poppins', sans-serif;
+            --bg-pale: #f8f9fa;
+            --text-dark: #444;
+            /* Colors sampled from your image */
+            --color-white: #ffffff;
+            --color-light-grey: #dcdcdc;
+            --color-mid-grey: #a9a9a9;
         }
 
         body, html {
@@ -21,186 +20,180 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
+            background: var(--bg-pale);
+            font-family: 'Poppins', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        #wheel-container {
+        #container {
             position: relative;
-            width: 85vmin;
-            height: 85vmin;
-            max-width: 500px;
-            max-height: 500px;
+            width: 80vmin;
+            height: 80vmin;
+            max-width: 450px;
+            max-height: 450px;
         }
 
-        canvas#wheel {
+        canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 8px solid #fff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
+        /* The Pointer from your image */
         .pointer {
             position: absolute;
-            top: -10px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #333; 
+            width: 40px;
+            height: 60px;
+            background: #333;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            transform: translate(-50%, -110%) rotate(180deg);
             z-index: 10;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
         }
-
-        button#spin-btn {
-            margin-top: 20px;
-            padding: 10px 40px;
-            font-size: 1.1rem;
-            background: #fff;
-            border: 2px solid #ddd;
-            border-radius: 25px;
-            color: #555;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        button#spin-btn:hover {
-            background: #eeeeee;
-            transform: translateY(-2px);
-        }
-
-        button#spin-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        #result {
+        
+        .center-hub {
             position: absolute;
-            top: 20px;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            background: #222;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 12px 40px;
+            cursor: pointer;
+            border: none;
+            border-radius: 30px;
+            background: #fff;
+            color: #333;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+
+        button:hover { transform: scale(1.05); background: #eee; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #result-display {
+            margin-bottom: 10px;
             font-size: 1.5rem;
             font-weight: 600;
-            background: rgba(255,255,255,0.9);
-            padding: 5px 20px;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
+            color: #333;
+            height: 2rem;
         }
     </style>
 </head>
 <body>
 
-    <div id="result"></div>
+    <div id="result-display"></div>
 
-    <div id="wheel-container">
+    <div id="container">
         <div class="pointer"></div>
-        <canvas id="wheel" width="600" height="600"></canvas>
+        <div class="center-hub"></div>
+        <canvas id="wheel" width="800" height="800"></canvas>
     </div>
 
-    <button id="spin-btn">Click to Spin</button>
+    <button id="spinBtn">SPIN</button>
 
     <script>
-        const canvas = document.getElementById('wheel'),
-              ctx = canvas.getContext('2d'),
-              spinBtn = document.getElementById('spin-btn'),
-              resultEl = document.getElementById('result'),
-              numSlices = 39,
-              sliceAngle = (2 * Math.PI) / numSlices,
-              center = canvas.width / 2,
-              radius = center - 10;
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const btn = document.getElementById('spinBtn');
+        const resDisp = document.getElementById('result-display');
 
-        // Hardcoded Prank Numbers
-        let prankNumbers = [1, 3, 5, 7, 9];
-        
-        const colors = ['#ffffff', '#d6dbdb', '#a3a1a4'];
+        const totalSlices = 39;
+        const sliceAngle = (Math.PI * 2) / totalSlices;
+        const prankSequence = [1, 3, 5, 7, 9];
+        let prankIndex = 0;
 
-        function drawWheel(rotation = 0) {
+        // Pale theme colors
+        const palette = ['#ffffff', '#e0e0e0', '#b0b0b0'];
+
+        function draw(rotation = 0) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX - 10;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
-            ctx.translate(center, center);
+            ctx.translate(centerX, centerY);
             ctx.rotate(rotation);
 
-            for (let i = 0; i < numSlices; i++) {
+            for (let i = 0; i < totalSlices; i++) {
                 ctx.beginPath();
-                ctx.fillStyle = colors[i % 3];
+                ctx.fillStyle = palette[i % 3];
                 ctx.moveTo(0, 0);
                 ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = "rgba(255,255,255,0.5)";
+                ctx.lineWidth = 2;
                 ctx.stroke();
 
-                
+                // Numbers
                 ctx.save();
-                ctx.fillStyle = '#444';
-                ctx.font = '500 14px Poppins';
-                ctx.textAlign = 'right';
-                const angle = i * sliceAngle + sliceAngle / 2;
-                ctx.rotate(angle);
-                ctx.fillText(i + 1, radius - 20, 5);
+                ctx.rotate(i * sliceAngle + sliceAngle / 2);
+                ctx.fillStyle = "#333";
+                ctx.font = "bold 24px Poppins";
+                ctx.textAlign = "right";
+                // Text is shifted slightly to look centered in the pale slices
+                ctx.fillText(i + 1, radius - 40, 10);
                 ctx.restore();
             }
             ctx.restore();
-            
-            
-            ctx.beginPath();
-            ctx.arc(center, center, 20, 0, Math.PI * 2);
-            ctx.fillStyle = '#333';
-            ctx.fill();
         }
 
-        function getNextNumber() {
-            if (prankNumbers.length > 0) {
-                return prankNumbers.shift();
-            }
-            return Math.floor(Math.random() * numSlices) + 1;
-        }
+        let currentRotation = -Math.PI / 2; // Start with 1 at top
+        draw(currentRotation);
 
-        function spinWheel() {
-            spinBtn.disabled = true;
-            resultEl.style.display = 'none';
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            resDisp.innerText = "";
             
-            const chosenNumber = getNextNumber();
-            const chosenSlice = chosenNumber - 1;
+            // Get target from prank list or random
+            const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
+            // Calculate final angle to land on targetNum at the TOP
+            const extraSpins = 5 * Math.PI * 2;
+            const targetSliceIndex = targetNum - 1;
+            const targetAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2);
             
-            const extraRotations = 5 + Math.random() * 3;
-            const finalRotation = (extraRotations * 2 * Math.PI) - (chosenSlice * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2);
+            const startAngle = currentRotation;
+            const endAngle = startAngle + extraSpins + (targetAngle - (startAngle % (Math.PI * 2)));
             
-            const spinDuration = 5000;
-            let startTime = null;
+            const duration = 4000;
+            const startTime = performance.now();
 
-            function animate(time) {
-                if (!startTime) startTime = time;
-                let elapsed = time - startTime;
-                let progress = Math.min(elapsed / spinDuration, 1);
+            function animate(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
                 
+                // Ease out cubic
+                const easeOut = 1 - Math.pow(1 - t, 3);
+                currentRotation = startAngle + (endAngle - startAngle) * easeOut;
                 
-                let easedProgress = 1 - Math.pow(1 - progress, 4);
-                
-                drawWheel(finalRotation * easedProgress);
+                draw(currentRotation);
 
-                if (progress < 1) {
+                if (t < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    resultEl.style.display = 'block';
-                    resultEl.innerHTML = `Result: ${chosenNumber}`;
-                    spinBtn.disabled = false;
+                    btn.disabled = false;
+                    resDisp.innerText = "Landed on: " + targetNum;
                 }
             }
             requestAnimationFrame(animate);
-        }
-
-        spinBtn.addEventListener('click', spinWheel);
-        drawWheel(-Math.PI / 2); 
+        });
     </script>
 </body>
 </html>
