@@ -25,7 +25,7 @@
 
         :root {
             --bg: #f0f2f2;
-            --accent: #222;
+            --accent: #3f536e;
             --slot-w: 100px;
         }
 
@@ -35,7 +35,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg);
+            
             font-family: 'Google Sans Flex', sans-serif;
             display: flex;
             flex-direction: column;
@@ -84,15 +84,15 @@
         }
 
         .c1 {
-            background: #ffffff;
+            background: #ecfaff;
         }
 
         .c2 {
-            background: #e8e8e8;
+            background: #c1d0dd;
         }
 
         .c3 {
-            background: #b8b8b8;
+            background: #c1e1eb;
         }
 
         #pointer {
@@ -101,9 +101,10 @@
             top: 0;
             bottom: 0;
             width: 4px;
-            background: #ff4757;
+            background: #47bbff;
             transform: translateX(-50%);
             z-index: 10;
+            opacity: 0.5;
         }
 
         #pointer::before {
@@ -114,7 +115,9 @@
             transform: translateX(-50%);
             border-left: 12px solid transparent;
             border-right: 12px solid transparent;
-            border-top: 14px solid #ff4757;
+            border-top: 14px solid #47bbff;
+
+
         }
 
         button {
@@ -128,13 +131,15 @@
             color: #fff;
             font-weight: 600;
             font-size: 1.1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(68, 108, 168, 0.747);
             transition: 0.2s;
         }
 
         button:hover {
             transform: scale(1.05);
-            background: #000;
+            color: var(--accent);
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(68, 108, 168, 0.747);
         }
 
         button:disabled {
@@ -148,10 +153,88 @@
             font-size: 17px;
             color: #b1b0b0;
         }
+
+        /* Animated background orbs */
+        .bg-visuals {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: #e0e5ec5d;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 3s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            background: #7dc4d1;
+            top: -10%;
+            left: -10%;
+        }
+
+        .orb-2 {
+            background: #a7fcbc;
+            bottom: -10%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            background: #f1d9ad;
+            top: 20%;
+            right: 20%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(100px, 50px) scale(2);
+            }
+        }
+
+        /* Glassmorphism Viewport */
+        #viewport {
+            position: relative;
+            width: 320px;
+            height: 120px;
+            /* Frosted Glass Effect */
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            overflow: hidden;
+        }
+
+        /* Make numbers pop against glass */
+        .slot {
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.185);
+        }
     </style>
 </head>
 
 <body>
+    <div class="bg-visuals">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
 
     <div id="result-banner">Who's gonna be the lucky one? </div>
 
@@ -184,10 +267,10 @@
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
 
-            const freq = 450 - (pitchMod * 350);
+            const freq = 800 - (pitchMod * -900);
             osc.frequency.setValueAtTime(freq, t);
             gain.gain.setValueAtTime(0.03, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -221,7 +304,7 @@
             strip.innerHTML = html;
         }
 
-const finalMessages = [
+        const finalMessages = [
             targetNum => `That's you. Number ${targetNum}.`,
             targetNum => `Nice to meet you. Number ${targetNum}.`,
             targetNum => `You. ${targetNum} is the lucky number today.`,
@@ -235,10 +318,9 @@ const finalMessages = [
             btn.disabled = true;
             const rollingTexts = [
                 "Spinning...",
-                "Shuffling...",
-                "Momentum, p=mv is building...",
+                "It might be...",
+                "Momentum is building...",
                 "Luck is turning to..."
-
             ];
             let rollingTextIndex = Math.floor(Math.random() * rollingTexts.length);
             banner.innerText = rollingTexts[rollingTextIndex];
@@ -291,6 +373,13 @@ const finalMessages = [
                         banner.innerText = finalMessages[finalTextIndex](targetNum);
                         finalTextIndex = (finalTextIndex + 1) % finalMessages.length;
                     }, 500);
+
+                    // Add a flash/shimmer effect to the glass on landing
+                    viewport.style.transition = 'background 0.3s';
+                    viewport.style.background = 'rgba(255, 255, 255, 0.5)';
+                    setTimeout(() => {
+                        viewport.style.background = 'rgba(255, 255, 255, 0.2)';
+                    }, 300);
                 }
             }
             requestAnimationFrame(animate);
