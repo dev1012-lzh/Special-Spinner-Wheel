@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Fixed Horizontal Scroller</title>
+    <title>Calibrated Dramatic Scroller</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -60,12 +60,10 @@
             border-right: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* Color palette from your images */
         .c1 { background: #ffffff; }
         .c2 { background: #e8e8e8; }
         .c3 { background: #b8b8b8; }
 
-        /* The Red Vertical Pointer */
         #pointer {
             position: absolute;
             left: 50%;
@@ -74,7 +72,6 @@
             background: #ff4757;
             transform: translateX(-50%);
             z-index: 10;
-            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
         }
 
         #pointer::before {
@@ -102,7 +99,6 @@
         }
 
         button:hover { transform: scale(1.05); background: #000; }
-        button:disabled { background: #999; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
@@ -126,11 +122,10 @@
         const prankSequence = [1, 3, 5, 7, 9];
         let prankIndex = 0;
 
-        // Build the strip with enough buffer for long scrolling
         function initStrip() {
             const classes = ['c1', 'c2', 'c3'];
             let html = '';
-            for (let r = 0; r < 10; r++) { // 10 sets for deep scrolling
+            for (let r = 0; r < 25; r++) { 
                 for (let i = 1; i <= totalNums; i++) {
                     html += `<div class="slot ${classes[i % 3]}">${i}</div>`;
                 }
@@ -139,22 +134,17 @@
         }
         initStrip();
 
-        // Audio: Slide Whistle effect
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playWhistle(pitchMod) {
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
             osc.type = 'triangle';
-            // Pitch slides based on wheel speed
-            const freq = 500 - (pitchMod * 300); 
+            const freq = 450 - (pitchMod * 300); 
             osc.frequency.setValueAtTime(freq, t);
-            osc.frequency.exponentialRampToValueAtTime(freq * 0.9, t + 0.1);
-            
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.1);
             gain.gain.setValueAtTime(0.04, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -168,20 +158,21 @@
 
             const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
-            const viewWidth = 320;
-            const centerOffset = viewWidth / 2;
+            // MATH CALIBRATION
+            // 1.5 slot difference adjustment (-150px) to fix the "1 on 39" error
+            const calibrationOffset = -1.5 * slotW; 
+            const centerOfViewport = 160; 
             
-            // Logic Fix: Target a set deep in the strip (index 6)
-            // Position = -(Index * Width) + Center - (Half of Slot Width)
-            const targetSetBase = 6 * totalNums;
+            // We want to land on a set deep in the strip for a long 10s animation
+            const targetSetBase = 18 * totalNums;
             const targetIndex = targetSetBase + (targetNum - 1);
             
-            // Random "Degree" offset (+/- 25px) so it doesn't land perfectly dead-center
-            const randOffset = (Math.random() - 0.5) * 50;
+            // Random jitter within the slot for realism (+/- 30px)
+            const randJitter = (Math.random() - 0.5) * 60;
             
-            const finalX = -(targetIndex * slotW) + centerOffset - (slotW / 2) + randOffset;
+            const finalX = -(targetIndex * slotW) + centerOfViewport - (slotW / 2) + calibrationOffset + randJitter;
             
-            const duration = 5000;
+            const duration = 10000; 
             const startTime = performance.now();
             let lastTick = 0;
 
@@ -189,13 +180,12 @@
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / duration, 1);
                 
-                // Heavy Ease-Out
-                const ease = 1 - Math.pow(1 - t, 4);
+                // Super smooth quintic ease-out
+                const ease = 1 - Math.pow(1 - t, 5);
                 const currentX = ease * finalX;
                 
                 strip.style.transform = `translateX(${currentX}px)`;
 
-                // Sound triggers as slots pass the center
                 if (Math.abs(currentX - lastTick) >= slotW) {
                     playWhistle(t);
                     lastTick = currentX;
