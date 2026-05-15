@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pale Spinner - Hum Edition</title>
+    <title>Anti-Clockwise Pale Spinner</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f5f5f5;
+            --bg: #f2f2f2;
             --hub: #222;
             --ptr: #333;
         }
@@ -23,30 +23,31 @@
         }
 
         #result-text {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 600;
             color: #444;
-            margin-bottom: 20px;
-            min-height: 1.2em;
+            margin-bottom: 15px;
+            min-height: 1.5em;
         }
 
         #wheel-wrapper {
             position: relative;
             width: 85vmin; height: 85vmin;
-            max-width: 500px; max-height: 500px;
+            max-width: 480px; max-height: 480px;
         }
 
         canvas {
             width: 100%; height: 100%;
             border-radius: 50%;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.08);
         }
 
+        /* Downward Triangle Pointer */
         .pointer-tri {
             position: absolute;
-            top: 22%; 
+            top: 20%; 
             left: 50%;
-            width: 50px; height: 55px;
+            width: 46px; height: 52px;
             background: var(--ptr);
             clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
             transform: translateX(-50%);
@@ -56,29 +57,29 @@
         .center-hub {
             position: absolute;
             top: 50%; left: 50%;
-            width: 60px; height: 60px;
+            width: 58px; height: 58px;
             background: var(--hub);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 16;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
 
         button {
-            margin-top: 30px;
-            padding: 14px 60px;
+            margin-top: 25px;
+            padding: 12px 55px;
             cursor: pointer;
             border: none;
             border-radius: 50px;
             background: var(--hub);
             color: #fff;
             font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s ease;
+            font-family: 'Poppins';
+            transition: 0.3s;
         }
 
-        button:hover { background: #444; transform: translateY(-2px); }
-        button:disabled { background: #bbb; cursor: not-allowed; }
+        button:hover { background: #444; transform: scale(1.03); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
@@ -104,7 +105,7 @@
         const prankSequence = [1, 3, 5, 7, 9];
         let prankIndex = 0;
 
-        // Audio Setup: Mid-range Hum
+        // Audio: Mid-range resonant hum
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let humOsc = null;
         let humGain = null;
@@ -113,7 +114,7 @@
             humOsc = audioCtx.createOscillator();
             humGain = audioCtx.createGain();
             humOsc.type = 'triangle'; 
-            humOsc.frequency.setValueAtTime(330, audioCtx.currentTime); // Mid-range E4
+            humOsc.frequency.setValueAtTime(280, audioCtx.currentTime); 
             humGain.gain.setValueAtTime(0, audioCtx.currentTime);
             humOsc.connect(humGain);
             humGain.connect(audioCtx.destination);
@@ -122,22 +123,20 @@
 
         function updateHum(velocity) {
             if (!humOsc) return;
-            // Pitch shifts slightly with speed
-            humOsc.frequency.setTargetAtTime(220 + (velocity * 220), audioCtx.currentTime, 0.05);
-            // Volume tied to velocity
-            humGain.gain.setTargetAtTime(velocity * 0.15, audioCtx.currentTime, 0.05);
+            humOsc.frequency.setTargetAtTime(180 + (velocity * 200), audioCtx.currentTime, 0.05);
+            humGain.gain.setTargetAtTime(velocity * 0.12, audioCtx.currentTime, 0.05);
         }
 
         function stopHum() {
-            if (humGain) humGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
-            setTimeout(() => { if(humOsc) humOsc.stop(); }, 200);
+            if (humGain) humGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.15);
+            setTimeout(() => { if(humOsc) { humOsc.stop(); humOsc = null; } }, 200);
         }
 
         function draw(rotation = 0) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = centerX - 15;
-            const palette = ['#ffffff', '#ececec', '#c0c0c0'];
+            const radius = centerX - 10;
+            const palette = ['#ffffff', '#e5e7e9', '#bdc3c7']; // Pale grey/white scheme
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
@@ -148,16 +147,19 @@
                 ctx.beginPath();
                 ctx.fillStyle = palette[i % 3];
                 ctx.moveTo(0, 0);
+                // Numbers move ANTI-CLOCKWISE: (i) remains positive for arc
                 ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
                 ctx.fill();
-                ctx.strokeStyle = "rgba(0,0,0,0.05)";
-                ctx.lineWidth = 1;
+                
+                ctx.strokeStyle = "rgba(255,255,255,0.8)";
+                ctx.lineWidth = 2;
                 ctx.stroke();
 
+                // Numbers
                 ctx.save();
                 ctx.rotate(i * sliceAngle + sliceAngle / 2);
                 ctx.fillStyle = "#333";
-                ctx.font = "600 28px Poppins";
+                ctx.font = "bold 26px Poppins";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 ctx.fillText(i + 1, radius - 55, 0);
@@ -166,6 +168,7 @@
             ctx.restore();
         }
 
+        // Aligning "1" at the top for an Anti-Clockwise layout
         let currentRotation = -Math.PI / 2 - (sliceAngle / 2);
         draw(currentRotation);
 
@@ -178,29 +181,35 @@
             
             const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
-            const extraSpins = (7 + Math.random() * 2) * Math.PI * 2; 
+            // ANTI-CLOCKWISE ROTATION: We add a negative total rotation
+            const extraSpins = -((6 + Math.random() * 2) * Math.PI * 2); 
             
-            // RANDOM OFFSET: Land slightly off-center for realism
-            // Slices are ~9.2 degrees. We offset by up to +/- 3.5 degrees
-            const randomPadding = (Math.random() - 0.5) * (sliceAngle * 0.7);
+            // Random offset for natural landing (degree off-center)
+            const randomPadding = (Math.random() - 0.5) * (sliceAngle * 0.6);
             
+            /** * For Anti-Clockwise numbers (1, 2, 3 moving left):
+             * Target index is clockwise relative to start.
+             */
             const targetSliceIndex = targetNum - 1;
-            const finalLandingAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2) + randomPadding;
+            const finalLandingAngle = (targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2) + randomPadding;
             
             const startAngle = currentRotation;
+            // The difference must be negative to spin anti-clockwise
             const endAngle = startAngle + extraSpins + (finalLandingAngle - (startAngle % (Math.PI * 2)));
             
-            const duration = 6000;
+            const duration = 5500;
             const startTime = performance.now();
 
             function animate(now) {
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / duration, 1);
                 
-                const ease = 1 - Math.pow(1 - t, 4);
-                const velocity = Math.pow(1 - t, 2); // Simulated slowing down
+                // Quintic ease out for a heavy mechanical feel
+                const ease = 1 - Math.pow(1 - t, 5);
+                const velocity = Math.pow(1 - t, 2);
                 
                 currentRotation = startAngle + (endAngle - startAngle) * ease;
+                
                 updateHum(velocity);
                 draw(currentRotation);
 
@@ -210,6 +219,7 @@
                     stopHum();
                     btn.disabled = false;
                     resText.innerText = "Landed on: " + targetNum;
+                    // Normalize rotation
                     currentRotation %= (Math.PI * 2);
                 }
             }
