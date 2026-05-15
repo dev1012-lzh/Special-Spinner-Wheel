@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Calibrated Dramatic Scroller</title>
+    <title>Calibrated Scroller +150</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -53,10 +53,8 @@
             min-width: var(--slot-w);
             height: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            color: #333;
+            align-items: center; justify-content: center;
+            font-size: 2.8rem; color: #333;
             border-right: 1px solid rgba(0,0,0,0.05);
         }
 
@@ -66,18 +64,15 @@
 
         #pointer {
             position: absolute;
-            left: 50%;
-            top: 0; bottom: 0;
-            width: 4px;
-            background: #ff4757;
+            left: 50%; top: 0; bottom: 0;
+            width: 4px; background: #ff4757;
             transform: translateX(-50%);
             z-index: 10;
         }
 
         #pointer::before {
             content: '';
-            position: absolute;
-            top: 0; left: 50%;
+            position: absolute; top: 0; left: 50%;
             transform: translateX(-50%);
             border-left: 12px solid transparent;
             border-right: 12px solid transparent;
@@ -99,6 +94,7 @@
         }
 
         button:hover { transform: scale(1.05); background: #000; }
+        button:disabled { background: #999; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -125,7 +121,8 @@
         function initStrip() {
             const classes = ['c1', 'c2', 'c3'];
             let html = '';
-            for (let r = 0; r < 25; r++) { 
+            // 30 repeats to handle a long 10-second roll
+            for (let r = 0; r < 30; r++) { 
                 for (let i = 1; i <= totalNums; i++) {
                     html += `<div class="slot ${classes[i % 3]}">${i}</div>`;
                 }
@@ -158,21 +155,20 @@
 
             const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
-            // MATH CALIBRATION
-            // 1.5 slot difference adjustment (-150px) to fix the "1 on 39" error
-            const calibrationOffset = -1.5 * slotW; 
+            // POSITIVE CALIBRATION: +150px to shift strip right
+            const calibrationOffset = 1.5 * slotW; 
             const centerOfViewport = 160; 
             
-            // We want to land on a set deep in the strip for a long 10s animation
-            const targetSetBase = 18 * totalNums;
+            // Rolling deep into the strip for drama
+            const targetSetBase = 22 * totalNums;
             const targetIndex = targetSetBase + (targetNum - 1);
             
-            // Random jitter within the slot for realism (+/- 30px)
-            const randJitter = (Math.random() - 0.5) * 60;
+            // Added slight jitter so it doesn't land perfectly robotic
+            const randJitter = (Math.random() - 0.5) * 40;
             
             const finalX = -(targetIndex * slotW) + centerOfViewport - (slotW / 2) + calibrationOffset + randJitter;
             
-            const duration = 10000; 
+            const duration = 10000; // 10 seconds
             const startTime = performance.now();
             let lastTick = 0;
 
@@ -180,7 +176,7 @@
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / duration, 1);
                 
-                // Super smooth quintic ease-out
+                // quintic ease-out for a long, heavy "mechanical" drag finish
                 const ease = 1 - Math.pow(1 - t, 5);
                 const currentX = ease * finalX;
                 
