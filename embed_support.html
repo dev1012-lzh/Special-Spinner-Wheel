@@ -3,128 +3,141 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pale Spinner 1-39</title>
+    <title>Premium Pale Spinner</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-pale: #f8f9fa;
-            --text-dark: #444;
-            /* Colors sampled from your image */
-            --color-white: #ffffff;
-            --color-light-grey: #dcdcdc;
-            --color-mid-grey: #a9a9a9;
+            --bg: #f5f5f5;
+            --hub: #222;
+            --ptr: #333;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-pale);
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
             font-family: 'Poppins', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             overflow: hidden;
         }
 
-        #container {
+        #ui-layer {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 20;
+        }
+
+        #result-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #444;
+            margin: 0;
+            min-height: 1.2em;
+        }
+
+        #wheel-wrapper {
             position: relative;
-            width: 80vmin;
-            height: 80vmin;
-            max-width: 450px;
-            max-height: 450px;
+            width: 85vmin; height: 85vmin;
+            max-width: 500px; max-height: 500px;
+            display: flex; align-items: center; justify-content: center;
         }
 
         canvas {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
         }
 
-        /* The Pointer from your image */
-        .pointer {
+        /* The specific downward triangle pointer from your image */
+        .pointer-tri {
             position: absolute;
-            top: 50%;
+            top: 25%; /* Positioned above center pointing down */
             left: 50%;
-            width: 40px;
-            height: 60px;
-            background: #333;
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            transform: translate(-50%, -110%) rotate(180deg);
-            z-index: 10;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+            width: 50px; height: 50px;
+            background: var(--ptr);
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+            transform: translateX(-50%);
+            z-index: 15;
         }
         
         .center-hub {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 50px;
-            height: 50px;
-            background: #222;
+            top: 50%; left: 50%;
+            width: 60px; height: 60px;
+            background: var(--hub);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 11;
+            z-index: 16;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         button {
             margin-top: 30px;
-            padding: 12px 40px;
+            padding: 14px 60px;
             cursor: pointer;
             border: none;
-            border-radius: 30px;
-            background: #fff;
-            color: #333;
+            border-radius: 50px;
+            background: var(--hub);
+            color: #fff;
             font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: 0.2s;
         }
 
-        button:hover { transform: scale(1.05); background: #eee; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        #result-display {
-            margin-bottom: 10px;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            height: 2rem;
-        }
+        button:hover { transform: scale(1.05); background: #444; }
+        button:active { transform: scale(0.95); }
+        button:disabled { background: #bbb; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
 
-    <div id="result-display"></div>
-
-    <div id="container">
-        <div class="pointer"></div>
-        <div class="center-hub"></div>
-        <canvas id="wheel" width="800" height="800"></canvas>
+    <div id="ui-layer">
+        <p id="result-text">Ready?</p>
     </div>
 
-    <button id="spinBtn">SPIN</button>
+    <div id="wheel-wrapper">
+        <div class="pointer-tri"></div>
+        <div class="center-hub"></div>
+        <canvas id="wheel" width="1000" height="1000"></canvas>
+    </div>
+
+    <button id="spinBtn">SPIN WHEEL</button>
 
     <script>
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const btn = document.getElementById('spinBtn');
-        const resDisp = document.getElementById('result-display');
+        const resText = document.getElementById('result-text');
 
         const totalSlices = 39;
         const sliceAngle = (Math.PI * 2) / totalSlices;
         const prankSequence = [1, 3, 5, 7, 9];
         let prankIndex = 0;
 
-        // Pale theme colors
-        const palette = ['#ffffff', '#e0e0e0', '#b0b0b0'];
+        // Audio Context for Ticks
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTick(vol) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
 
         function draw(rotation = 0) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = centerX - 10;
+            const radius = centerX - 15;
+            const palette = ['#ffffff', '#ececec', '#c0c0c0'];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
@@ -137,59 +150,69 @@
                 ctx.moveTo(0, 0);
                 ctx.arc(0, 0, radius, i * sliceAngle, (i + 1) * sliceAngle);
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.5)";
+                
+                ctx.strokeStyle = "rgba(255,255,255,1)";
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Numbers
                 ctx.save();
                 ctx.rotate(i * sliceAngle + sliceAngle / 2);
                 ctx.fillStyle = "#333";
-                ctx.font = "bold 24px Poppins";
+                ctx.font = "600 30px Poppins";
                 ctx.textAlign = "right";
-                // Text is shifted slightly to look centered in the pale slices
-                ctx.fillText(i + 1, radius - 40, 10);
+                ctx.textBaseline = "middle";
+                ctx.fillText(i + 1, radius - 60, 0);
                 ctx.restore();
             }
             ctx.restore();
         }
 
-        let currentRotation = -Math.PI / 2; // Start with 1 at top
+        // 1 starts at top. Offset = -90deg - half slice
+        let currentRotation = -Math.PI / 2 - (sliceAngle / 2);
         draw(currentRotation);
 
         btn.addEventListener('click', () => {
-            btn.disabled = true;
-            resDisp.innerText = "";
+            if(audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Get target from prank list or random
+            btn.disabled = true;
+            resText.innerText = "Spinning...";
+            
             const targetNum = prankIndex < prankSequence.length ? prankSequence[prankIndex++] : Math.floor(Math.random() * 39) + 1;
             
-            // Calculate final angle to land on targetNum at the TOP
-            const extraSpins = 5 * Math.PI * 2;
+            const extraSpins = (8 + Math.random() * 2) * Math.PI * 2; 
             const targetSliceIndex = targetNum - 1;
-            const targetAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2);
+            const finalLandingAngle = -(targetSliceIndex * sliceAngle) - (sliceAngle / 2) - (Math.PI / 2);
             
             const startAngle = currentRotation;
-            const endAngle = startAngle + extraSpins + (targetAngle - (startAngle % (Math.PI * 2)));
+            const endAngle = startAngle + extraSpins + (finalLandingAngle - (startAngle % (Math.PI * 2)));
             
-            const duration = 4000;
+            const duration = 5000;
             const startTime = performance.now();
+            let lastTickAngle = startAngle;
 
             function animate(now) {
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / duration, 1);
                 
-                // Ease out cubic
-                const easeOut = 1 - Math.pow(1 - t, 3);
-                currentRotation = startAngle + (endAngle - startAngle) * easeOut;
+                // Quartic Ease Out (Faster start, very long smooth finish)
+                const ease = 1 - Math.pow(1 - t, 4);
+                currentRotation = startAngle + (endAngle - startAngle) * ease;
                 
+                // Sound logic: Play tick every time a new slice passes the top
+                if (Math.abs(currentRotation - lastTickAngle) >= sliceAngle) {
+                    const velocity = 1 - t; // Volume and pitch drop as it slows
+                    playTick(0.1 * velocity + 0.02);
+                    lastTickAngle = currentRotation;
+                }
+
                 draw(currentRotation);
 
                 if (t < 1) {
                     requestAnimationFrame(animate);
                 } else {
                     btn.disabled = false;
-                    resDisp.innerText = "Landed on: " + targetNum;
+                    resText.innerText = "Landed on: " + targetNum;
+                    currentRotation %= (Math.PI * 2);
                 }
             }
             requestAnimationFrame(animate);
